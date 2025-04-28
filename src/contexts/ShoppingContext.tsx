@@ -22,18 +22,21 @@ export type MarketPrice = {
   items: {
     productId: string;
     price: number;
+    productName: string;
+    brand?: string;
   }[];
 };
 
 type ShoppingContextType = {
   cartItems: CartItem[];
-  addToCart: (product: Product) => void;
+  addToCart: (product: Product, brand?: string) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   updateBrand: (productId: string, brand: string) => void;
   clearCart: () => void;
   marketComparisons: MarketPrice[];
   generateComparison: () => void;
+  isGeneratingComparison: boolean;
 };
 
 const ShoppingContext = createContext<ShoppingContextType | null>(null);
@@ -49,8 +52,9 @@ export const useShoppingContext = () => {
 export const ShoppingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [marketComparisons, setMarketComparisons] = useState<MarketPrice[]>([]);
+  const [isGeneratingComparison, setIsGeneratingComparison] = useState(false);
 
-  const addToCart = (product: Product) => {
+  const addToCart = (product: Product, brand?: string) => {
     setCartItems(prev => {
       const existingItemIndex = prev.findIndex(item => item.product.id === product.id);
       
@@ -59,12 +63,13 @@ export const ShoppingProvider: React.FC<{ children: ReactNode }> = ({ children }
         const newCartItems = [...prev];
         newCartItems[existingItemIndex] = {
           ...newCartItems[existingItemIndex],
-          quantity: newCartItems[existingItemIndex].quantity + 1
+          quantity: newCartItems[existingItemIndex].quantity + 1,
+          brand: brand || newCartItems[existingItemIndex].brand
         };
         return newCartItems;
       } else {
         // Item not in cart, add it
-        return [...prev, { product, quantity: 1 }];
+        return [...prev, { product, quantity: 1, brand }];
       }
     });
   };
@@ -100,12 +105,43 @@ export const ShoppingProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const clearCart = () => {
     setCartItems([]);
+    setMarketComparisons([]);
   };
 
-  // Mock function to generate price comparisons
-  const generateComparison = () => {
+  // Function to generate price comparisons with OpenAI
+  const generateComparison = async () => {
     if (cartItems.length === 0) return;
 
+    setIsGeneratingComparison(true);
+    
+    try {
+      // Call OpenAI Edge Function
+      const response = await fetch('/api/generate-market-comparison', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ cartItems }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate comparison');
+      }
+      
+      const data = await response.json();
+      setMarketComparisons(data.marketComparisons);
+    } catch (error) {
+      console.error('Error generating comparison:', error);
+      
+      // Fallback to mock data if API fails
+      generateMockComparison();
+    } finally {
+      setIsGeneratingComparison(false);
+    }
+  };
+  
+  // Mock function as fallback
+  const generateMockComparison = () => {
     // Mock data for supermarkets
     const supermarkets = [
       { id: 'm1', name: 'Carrefour' },
@@ -116,12 +152,19 @@ export const ShoppingProvider: React.FC<{ children: ReactNode }> = ({ children }
     // Generate random prices for each product in each supermarket
     const comparisons = supermarkets.map(market => {
       const items = cartItems.map(item => {
-        // Base price varies by market and product
-        const basePrice = 5 + Math.random() * 15;
+        // Base price varies by market, product and brand
+        let basePrice = 5 + Math.random() * 15;
+        
+        // Premium brands cost more
+        if (item.brand && ['Nestlé', 'Tio João', 'Dove', 'Omo'].includes(item.brand)) {
+          basePrice *= 1.2;
+        }
         
         return {
           productId: item.product.id,
-          price: parseFloat((basePrice * item.quantity).toFixed(2))
+          productName: item.product.name,
+          price: parseFloat((basePrice * item.quantity).toFixed(2)),
+          brand: item.brand
         };
       });
 
@@ -148,7 +191,8 @@ export const ShoppingProvider: React.FC<{ children: ReactNode }> = ({ children }
     updateBrand,
     clearCart,
     marketComparisons,
-    generateComparison
+    generateComparison,
+    isGeneratingComparison
   };
 
   return (

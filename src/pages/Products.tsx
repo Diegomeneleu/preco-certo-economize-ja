@@ -9,6 +9,15 @@ import { products, searchProducts } from "@/data/products";
 import ProductCard from "@/components/ProductCard";
 import { useShoppingContext } from "@/contexts/ShoppingContext";
 import { Badge } from "@/components/ui/badge";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 
 const Products = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -22,15 +31,59 @@ const Products = () => {
       <Header 
         title="PreçoCerto" 
         rightElement={
-          <Button variant="outline" className="text-white border-white hover:bg-white/20" asChild>
-            <Link to="/simulation">
-              <ShoppingCart className="mr-2" size={18} />
-              <span>Carrinho</span>
-              {totalItems > 0 && (
-                <Badge className="ml-2 bg-secondary">{totalItems}</Badge>
-              )}
-            </Link>
-          </Button>
+          <Drawer>
+            <DrawerTrigger asChild>
+              <Button variant="outline" className="text-white border-white hover:bg-white/20 relative">
+                <ShoppingCart className="mr-2" size={18} />
+                <span>Carrinho</span>
+                {totalItems > 0 && (
+                  <Badge className="absolute -top-2 -right-2 bg-secondary">{totalItems}</Badge>
+                )}
+              </Button>
+            </DrawerTrigger>
+            <DrawerContent className="h-[80vh]">
+              <DrawerHeader>
+                <DrawerTitle>Seu carrinho</DrawerTitle>
+              </DrawerHeader>
+              <div className="px-4 py-2 overflow-y-auto">
+                {cartItems.length === 0 ? (
+                  <div className="text-center py-8">
+                    <ShoppingCart className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                    <p className="text-gray-500">Seu carrinho está vazio</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {cartItems.map((item) => (
+                      <div key={item.product.id} className="flex items-center gap-3 border-b pb-3">
+                        <div className="h-16 w-16 rounded-md overflow-hidden">
+                          <img 
+                            src={item.product.image} 
+                            alt={item.product.name} 
+                            className="h-full w-full object-cover" 
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium">{item.product.name}</h4>
+                          {item.brand && (
+                            <p className="text-sm text-gray-500">Marca: {item.brand}</p>
+                          )}
+                          <p className="text-sm">Quantidade: {item.quantity}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <DrawerFooter>
+                <Button asChild>
+                  <Link to="/simulation">Ver carrinho completo</Link>
+                </Button>
+                <DrawerClose asChild>
+                  <Button variant="outline">Continuar comprando</Button>
+                </DrawerClose>
+              </DrawerFooter>
+            </DrawerContent>
+          </Drawer>
         }
       />
       
