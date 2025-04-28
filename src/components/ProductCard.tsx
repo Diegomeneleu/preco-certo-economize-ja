@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Button } from "./ui/button";
-import { Plus, Minus, Check } from "lucide-react";
+import { Plus, Check } from "lucide-react";
 import { Product } from "../contexts/ShoppingContext";
 import { useShoppingContext } from "../contexts/ShoppingContext";
 import {
@@ -13,39 +13,33 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Drawer, DrawerContent, DrawerTrigger } from "./ui/drawer";
-import { AspectRatio } from "./ui/aspect-ratio";
 
-// Better, more colorful product illustrations
-const productImages: Record<string, string> = {
-  "Arroz Branco": "/lovable-uploads/18305abd-f4af-4b25-bbbf-8ce882bf5667.png",
-  "Feijão Carioca": "https://cdn-icons-png.flaticon.com/512/7902/7902019.png",
-  "Óleo de Soja": "https://cdn-icons-png.flaticon.com/512/2553/2553691.png",
-  "Açúcar Refinado": "https://cdn-icons-png.flaticon.com/512/7902/7902259.png",
-  "Café em Pó": "https://cdn-icons-png.flaticon.com/512/7902/7902334.png",
-  "Leite Integral": "https://cdn-icons-png.flaticon.com/512/7902/7902132.png",
-  "Pão de Forma": "https://cdn-icons-png.flaticon.com/512/7902/7902100.png",
-  "Sal Refinado": "https://cdn-icons-png.flaticon.com/512/7902/7902385.png", 
-  "Macarrão Espaguete": "https://cdn-icons-png.flaticon.com/512/7902/7902424.png",
-  "Farinha de Trigo": "https://cdn-icons-png.flaticon.com/512/7902/7902220.png",
-  "Sabonete": "https://cdn-icons-png.flaticon.com/512/7902/7902362.png",
-  "Papel Higiênico": "https://cdn-icons-png.flaticon.com/512/7902/7902190.png",
-};
-
-// Mock brands for product categories
+// Product brands by category
 const productBrands: Record<string, string[]> = {
-  grãos: ["Camil", "Tio João", "Prato Fino", "Namorado"],
-  laticínios: ["Nestlé", "Itambé", "Piracanjuba", "Parmalat"],
-  óleos: ["Liza", "Soya", "Sadia", "Concórdia"],
-  massas: ["Barilla", "Adria", "Renata", "Vitarella"],
-  higiene: ["Dove", "Nivea", "Johnson's", "Palmolive"],
-  limpeza: ["Ypê", "Omo", "Veja", "Bombril"],
-  bebidas: ["Coca-Cola", "Nescafé", "Pilão", "3 Corações"],
-  padaria: ["Wickbold", "Pullman", "Panco", "Seven Boys"],
-  básicos: ["Qualimax", "Sinhá", "União", "Doutor Otker"],
-  temperos: ["Kitano", "Ajinomoto", "Knorr", "Sazon"],
-  farináceos: ["Dona Benta", "Rosa Branca", "Sol", "Primor"],
-  doces: ["Nestlé", "Garoto", "Lacta", "União"],
+  grãos: ["Camil", "Tio João", "Prato Fino", "Namorado", "Kicaldo", "Urbano"],
+  laticínios: ["Nestlé", "Itambé", "Piracanjuba", "Parmalat", "Elegê", "Vigor", "Danone"],
+  óleos: ["Liza", "Soya", "Sadia", "Concórdia", "Coamo", "Corcovado", "Salada"],
+  massas: ["Barilla", "Adria", "Renata", "Vitarella", "Piraquê", "Petybon", "Santa Amália"],
+  higiene: ["Dove", "Nivea", "Johnson's", "Palmolive", "Lux", "Protex", "Rexona", "Natura"],
+  limpeza: ["Ypê", "Omo", "Veja", "Bombril", "Assolan", "Minuano", "Girando Sol"],
+  bebidas: ["Coca-Cola", "Nescafé", "Pilão", "3 Corações", "Santa Clara", "Maratá", "Melitta"],
+  padaria: ["Wickbold", "Pullman", "Panco", "Seven Boys", "Visconti", "Bauducco", "Nutrella"],
+  básicos: ["Qualimax", "Sinhá", "União", "Doutor Otker", "Yoki", "Kitano", "Cepêra"],
+  temperos: ["Kitano", "Ajinomoto", "Knorr", "Sazon", "Arisco", "Maggi", "Sabor Ami"],
+  farináceos: ["Dona Benta", "Rosa Branca", "Sol", "Primor", "Boa Sorte", "Pantanal", "Amafil"],
+  doces: ["Nestlé", "Garoto", "Lacta", "União", "Arcor", "Harald", "Toddy"],
+  refrigerados: ["Sadia", "Perdigão", "Seara", "Aurora", "Rezende", "Frimesa"],
+  frutas: ["Turma da Mônica", "Natural One", "Del Valle", "Maguary"],
+  vegetais: ["Vapza", "Bonduelle", "Quero", "Jussara", "Fugini"],
+  congelados: ["Seara", "Sadia", "Perdigão", "Aurora", "Swift"],
+  pet: ["Pedigree", "Whiskas", "Royal Canin", "Premier", "Purina"],
 };
+
+// Extended product categories for better classification
+const additionalCategories = [
+  "refrigerados", "frutas", "vegetais", "congelados", "pet", "sobremesas",
+  "café da manhã", "lanches", "utensílios", "eletrônicos", "infantil"
+];
 
 type ProductCardProps = {
   product: Product;
@@ -82,39 +76,30 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const increaseQuantity = () => setQuantity(prev => prev + 1);
   const decreaseQuantity = () => setQuantity(prev => prev > 1 ? prev - 1 : 1);
 
-  // Use product-specific image if available, otherwise use placeholder
-  const productImage = productImages[product.name] || product.image;
-
   return (
-    <div className="card-gradient rounded-xl shadow-md overflow-hidden flex flex-col">
-      <div className="relative">
-        <AspectRatio ratio={1/1} className="w-full bg-sidebar/50">
-          <img
-            src={productImage}
-            alt={product.name}
-            className="w-full h-full object-contain p-3"
-          />
-        </AspectRatio>
-      </div>
-      <div className="p-4 flex flex-col flex-grow">
-        <h3 className="font-medium text-white mb-1">{product.name}</h3>
-        <div className="flex flex-wrap gap-1 mb-2">
-          {product.categories.map((category, index) => (
-            <span
-              key={index}
-              className="text-xs bg-accent/30 px-2 py-1 rounded-full text-white/80"
-            >
-              {category}
-            </span>
-          ))}
+    <div className="bg-sidebar/50 rounded-lg shadow-md hover:shadow-lg transition-all p-3 mb-2 border border-accent/20">
+      <div className="flex justify-between items-center">
+        <div>
+          <h3 className="font-medium text-white text-lg">{product.name}</h3>
+          <div className="flex flex-wrap gap-1 my-1">
+            {product.categories.map((category, index) => (
+              <span
+                key={index}
+                className="text-xs bg-accent/30 px-2 py-1 rounded-full text-white/80"
+              >
+                {category}
+              </span>
+            ))}
+          </div>
         </div>
-        <div className="mt-auto">
+        
+        <div className="ml-4">
           {uniqueBrands.length > 0 ? (
             <Drawer open={isOpen} onOpenChange={setIsOpen}>
               <DrawerTrigger asChild>
                 <Button
                   variant="outline"
-                  className="w-full border-secondary text-white hover:bg-secondary hover:text-white"
+                  className="border-secondary text-white hover:bg-secondary hover:text-white"
                 >
                   <Plus size={16} className="mr-1" />
                   Adicionar
@@ -145,7 +130,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
                         onClick={decreaseQuantity}
                         className="text-white hover:bg-accent/40"
                       >
-                        <Minus size={16} />
+                        <span className="text-lg font-bold">-</span>
                       </Button>
                       <span className="w-10 text-center text-white">{quantity}</span>
                       <Button 
@@ -154,7 +139,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
                         onClick={increaseQuantity}
                         className="text-white hover:bg-accent/40"
                       >
-                        <Plus size={16} />
+                        <span className="text-lg font-bold">+</span>
                       </Button>
                     </div>
                   </div>
@@ -179,7 +164,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
                 });
               }}
               variant="outline"
-              className="w-full border-secondary text-white hover:bg-secondary hover:text-white"
+              className="border-secondary text-white hover:bg-secondary hover:text-white"
             >
               <Plus size={16} className="mr-1" />
               Adicionar

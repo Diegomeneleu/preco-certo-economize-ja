@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -21,7 +20,7 @@
     --secondary-foreground: 0 0% 100%;
 
     --muted: 260 90% 25%;
-    --muted-foreground: 0 0% 80%;
+    --muted-foreground: 0 0% 100%;
 
     --accent: 271 64% 56%; /* Slightly lighter accent */
     --accent-foreground: 0 0% 100%;
@@ -48,7 +47,7 @@
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-
+    
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
 
@@ -95,11 +94,26 @@
   
   /* Improve text contrast throughout the app */
   h1, h2, h3, h4, h5, h6 {
-    @apply text-gray-900 dark:text-white;
+    @apply text-white;
   }
   
   p, span, li {
-    @apply text-gray-700 dark:text-gray-200;
+    @apply text-white/90;
+  }
+  
+  /* Improve contrast for inputs */
+  input, select, textarea {
+    @apply text-white bg-sidebar/50 border-accent/30 placeholder:text-white/50;
+  }
+  
+  /* Improve contrast for buttons */
+  button {
+    @apply text-white;
+  }
+  
+  /* Improve contrast for links */
+  a {
+    @apply text-secondary hover:text-secondary/80;
   }
 }
 

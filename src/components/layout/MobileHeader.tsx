@@ -37,7 +37,7 @@ const MobileHeader = () => {
         <Link to="/simulation" className="relative">
           <ShoppingCart size={24} className="text-white" />
           {totalItems > 0 && (
-            <Badge className="absolute -top-2 -right-2 bg-secondary">{totalItems}</Badge>
+            <Badge className="absolute -top-2 -right-2 bg-secondary text-white">{totalItems}</Badge>
           )}
         </Link>
       </div>
