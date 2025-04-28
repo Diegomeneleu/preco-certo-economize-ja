@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Drawer, DrawerContent, DrawerTrigger } from "./ui/drawer";
+import { AspectRatio } from "./ui/aspect-ratio";
 
 // Mock brands for product categories
 const productBrands: Record<string, string[]> = {
@@ -30,20 +31,20 @@ const productBrands: Record<string, string[]> = {
   doces: ["Nestlé", "Garoto", "Lacta", "União"],
 };
 
-// Product illustrations
+// Updated product illustrations with more clear illustrations
 const productImages: Record<string, string> = {
-  "Arroz Branco": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=200&h=200&fit=crop",
-  "Feijão Carioca": "https://images.unsplash.com/photo-1663610685601-3cc24331f77c?w=200&h=200&fit=crop",
-  "Óleo de Soja": "https://images.unsplash.com/photo-1620705444122-af64b3e56f79?w=200&h=200&fit=crop",
-  "Açúcar Refinado": "https://images.unsplash.com/photo-1621685692205-1c648035acb2?w=200&h=200&fit=crop",
-  "Café em Pó": "https://images.unsplash.com/photo-1611854778863-0702d0ef6b3b?w=200&h=200&fit=crop",
-  "Leite Integral": "https://images.unsplash.com/photo-1628088062854-d1870b4553da?w=200&h=200&fit=crop",
-  "Pão de Forma": "https://images.unsplash.com/photo-1549931319-a545dcf3bc73?w=200&h=200&fit=crop",
-  "Sal Refinado": "https://images.unsplash.com/photo-1589275776107-7e406c147766?w=200&h=200&fit=crop", 
-  "Macarrão Espaguete": "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=200&h=200&fit=crop",
-  "Farinha de Trigo": "https://images.unsplash.com/photo-1562244950-8462ca9d8289?w=200&h=200&fit=crop",
-  "Sabonete": "https://images.unsplash.com/photo-1584305574647-0cc949a2bb9f?w=200&h=200&fit=crop",
-  "Papel Higiênico": "https://images.unsplash.com/photo-1583251633146-d0c6c036187d?w=200&h=200&fit=crop",
+  "Arroz Branco": "https://cdn-icons-png.flaticon.com/512/2553/2553691.png",
+  "Feijão Carioca": "https://cdn-icons-png.flaticon.com/512/2553/2553738.png",
+  "Óleo de Soja": "https://cdn-icons-png.flaticon.com/512/5769/5769170.png",
+  "Açúcar Refinado": "https://cdn-icons-png.flaticon.com/512/3348/3348089.png",
+  "Café em Pó": "https://cdn-icons-png.flaticon.com/512/751/751621.png",
+  "Leite Integral": "https://cdn-icons-png.flaticon.com/512/3050/3050154.png",
+  "Pão de Forma": "https://cdn-icons-png.flaticon.com/512/3014/3014438.png",
+  "Sal Refinado": "https://cdn-icons-png.flaticon.com/512/2553/2553657.png", 
+  "Macarrão Espaguete": "https://cdn-icons-png.flaticon.com/512/2553/2553691.png",
+  "Farinha de Trigo": "https://cdn-icons-png.flaticon.com/512/3050/3050100.png",
+  "Sabonete": "https://cdn-icons-png.flaticon.com/512/1687/1687353.png",
+  "Papel Higiênico": "https://cdn-icons-png.flaticon.com/512/3516/3516235.png",
 };
 
 type ProductCardProps = {
@@ -81,11 +82,15 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col">
-      <img
-        src={productImage}
-        alt={product.name}
-        className="w-full h-32 object-cover"
-      />
+      <div className="relative">
+        <AspectRatio ratio={1/1} className="w-full bg-gray-50">
+          <img
+            src={productImage}
+            alt={product.name}
+            className="w-full h-full object-contain p-3"
+          />
+        </AspectRatio>
+      </div>
       <div className="p-4 flex flex-col flex-grow">
         <h3 className="font-medium text-gray-800 mb-1">{product.name}</h3>
         <div className="flex flex-wrap gap-1 mb-2">

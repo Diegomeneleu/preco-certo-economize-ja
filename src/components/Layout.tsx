@@ -17,6 +17,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "./ui/button";
 import { SheetTrigger, Sheet, SheetContent } from "./ui/sheet";
+import { useShoppingContext } from "@/contexts/ShoppingContext";
+import { Badge } from "./ui/badge";
 
 // Renamed from SidebarMenu to SidebarMenuContent to avoid conflict with the import
 const SidebarMenuContent = () => {
@@ -141,6 +143,41 @@ const MobileSidebar = () => {
   );
 };
 
+// Cart summary component to show in the header
+const CartSummary = () => {
+  const { cartItems } = useShoppingContext();
+  const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  
+  // Estimate total price (since real price data isn't available in the model)
+  // Using an average value per item
+  const estimatedTotal = cartItems.reduce((sum, item) => {
+    // Base price varies by product type
+    let basePrice = 0;
+    if (item.product.categories.includes("grãos")) basePrice = 10;
+    else if (item.product.categories.includes("laticínios")) basePrice = 8;
+    else if (item.product.categories.includes("óleos")) basePrice = 12;
+    else if (item.product.categories.includes("higiene")) basePrice = 7;
+    else basePrice = 5;
+    
+    // Premium brands cost more
+    if (item.brand && ["Nestlé", "Tio João", "Dove", "Omo"].includes(item.brand)) {
+      basePrice *= 1.2;
+    }
+    
+    return sum + (basePrice * item.quantity);
+  }, 0);
+  
+  return (
+    <Link to="/simulation" className="flex items-center gap-2 bg-white/10 backdrop-blur-sm p-2 rounded-lg hover:bg-white/20 transition-colors">
+      <ShoppingCart size={18} className="text-white" />
+      <div className="text-white text-sm">
+        <div className="font-medium">{totalItems} {totalItems === 1 ? "item" : "itens"}</div>
+        <div>R$ {estimatedTotal.toFixed(2)}</div>
+      </div>
+    </Link>
+  );
+};
+
 const Layout = () => {
   const location = useLocation();
   const { toast } = useToast();
@@ -167,7 +204,14 @@ const Layout = () => {
             <div className="p-4 flex justify-between items-center md:hidden">
               <MobileSidebar />
               <h2 className="font-bold text-primary text-xl">PreçoCerto</h2>
+              <CartSummary />
             </div>
+            
+            <div className="hidden md:flex justify-between items-center bg-primary p-3 mb-4">
+              <h2 className="font-bold text-white text-xl">PreçoCerto</h2>
+              <CartSummary />
+            </div>
+            
             <div className="p-4 md:p-8">
               <Outlet />
             </div>
