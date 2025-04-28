@@ -18,7 +18,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "./ui/button";
 import { SheetTrigger, Sheet, SheetContent } from "./ui/sheet";
 
-const SidebarMenu = () => {
+// Renamed from SidebarMenu to SidebarMenuContent to avoid conflict with the import
+const SidebarMenuContent = () => {
   const location = useLocation();
   const isActive = (path: string) => location.pathname === path;
 
@@ -155,7 +156,7 @@ const Layout = () => {
               <SidebarHeader className="flex items-center justify-center p-4">
                 <h2 className="font-bold text-primary">PreçoCerto</h2>
               </SidebarHeader>
-              <SidebarMenu />
+              <SidebarMenuContent />
               <SidebarFooter className="p-4">
                 <p className="text-xs text-gray-500">© 2025 PreçoCerto</p>
               </SidebarFooter>
