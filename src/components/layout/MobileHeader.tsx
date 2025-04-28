@@ -16,7 +16,7 @@ const MobileHeader = () => {
   };
   
   return (
-    <div className="p-4 flex justify-between items-center md:hidden bg-primary">
+    <div className="p-4 flex justify-between items-center md:hidden bg-purple-gradient">
       <div className="flex items-center gap-2">
         <MobileSidebar />
         <h2 className="font-bold text-white text-xl">PreçoCerto</h2>

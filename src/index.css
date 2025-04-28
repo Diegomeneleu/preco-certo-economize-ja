@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -94,16 +95,16 @@
   
   /* Improve text contrast throughout the app */
   h1, h2, h3, h4, h5, h6 {
-    @apply text-white;
+    @apply text-white font-bold;
   }
   
   p, span, li {
-    @apply text-white/90;
+    @apply text-white;
   }
   
   /* Improve contrast for inputs */
   input, select, textarea {
-    @apply text-white bg-sidebar/50 border-accent/30 placeholder:text-white/50;
+    @apply text-white bg-sidebar/50 border-accent/30 placeholder:text-white/70;
   }
   
   /* Improve contrast for buttons */
@@ -113,7 +114,7 @@
   
   /* Improve contrast for links */
   a {
-    @apply text-secondary hover:text-secondary/80;
+    @apply text-white hover:text-white/90;
   }
 }
 
@@ -128,5 +129,32 @@
 
 /* High contrast text helpers */
 .text-high-contrast {
-  @apply text-white drop-shadow-sm;
+  @apply text-white font-medium drop-shadow-md;
+}
+
+/* Category box styling */
+.category-box {
+  @apply px-4 py-3 rounded-lg border border-white/20 bg-primary/30 hover:bg-primary/40 
+  transition-all text-center shadow-md cursor-pointer;
+}
+
+.category-box.active {
+  @apply bg-secondary text-white border-secondary;
+}
+
+/* Market comparison card styling */
+.market-card {
+  @apply p-5 rounded-xl border-2 shadow-lg mb-4;
+}
+
+.market-card-cheapest {
+  @apply border-secondary bg-green-950/30;
+}
+
+.market-card-other {
+  @apply border-primary/30 bg-primary/10;
+}
+
+.price-display {
+  @apply text-3xl font-bold text-white;
 }

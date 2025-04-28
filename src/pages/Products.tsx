@@ -35,7 +35,7 @@ const Products = () => {
     : products;
   
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background">
       <Header 
         title="Produtos" 
         showBack={false}
@@ -43,7 +43,7 @@ const Products = () => {
       
       <div className="container mx-auto px-4 py-6 flex-1">
         <div className="relative mb-6">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white" size={20} />
           <Input
             className="pl-10"
             placeholder="Pesquisar produtos..."
@@ -59,10 +59,10 @@ const Products = () => {
               {savedLists.map((list) => (
                 <div 
                   key={list.id} 
-                  className="bg-accent/20 p-4 rounded-lg shadow-sm border border-accent/30"
+                  className="card-gradient p-4 rounded-lg shadow-md border border-white/10"
                 >
                   <h3 className="font-medium mb-1 text-white">{list.name}</h3>
-                  <p className="text-sm text-white/80 mb-2">
+                  <p className="text-sm text-white mb-2">
                     {list.items.length} {list.items.length === 1 ? 'item' : 'itens'}
                   </p>
                   <div className="flex gap-2">
@@ -89,22 +89,22 @@ const Products = () => {
           </div>
         )}
         
-        {/* Category selector */}
-        <div className="mb-6 overflow-x-auto">
+        {/* Category selector with box style */}
+        <div className="mb-6">
           <h2 className="text-xl font-semibold mb-3 text-white">Categorias</h2>
-          <div className="flex flex-wrap gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {allCategories.map((category) => (
-              <button
+              <div
                 key={category}
-                className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
-                  categoryFilter === category
-                    ? "bg-secondary text-white font-medium"
-                    : "bg-accent/20 text-white/80 hover:bg-accent/30"
+                className={`category-box ${
+                  categoryFilter === category ? "active" : ""
                 }`}
                 onClick={() => setCategoryFilter(category)}
               >
-                {category.charAt(0).toUpperCase() + category.slice(1)}
-              </button>
+                <span className="text-white font-medium">
+                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                </span>
+              </div>
             ))}
           </div>
         </div>
@@ -114,7 +114,7 @@ const Products = () => {
           
           {filteredProducts.length === 0 ? (
             <div className="text-center py-10">
-              <p className="text-white/70">Nenhum produto encontrado para "{searchQuery}"</p>
+              <p className="text-white">Nenhum produto encontrado para "{searchQuery}"</p>
             </div>
           ) : (
             <div className="flex flex-col gap-3">
