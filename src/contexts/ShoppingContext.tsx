@@ -1,5 +1,5 @@
-
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { useToast } from "@/hooks/use-toast";
 
 // Types
 export type Product = {
@@ -13,6 +13,13 @@ export type CartItem = {
   product: Product;
   quantity: number;
   brand?: string;
+};
+
+export type SavedList = {
+  id: string;
+  name: string;
+  items: CartItem[];
+  createdAt: string;
 };
 
 export type MarketPrice = {
@@ -29,6 +36,7 @@ export type MarketPrice = {
 
 type ShoppingContextType = {
   cartItems: CartItem[];
+  savedLists: SavedList[];
   addToCart: (product: Product, brand?: string, initialQuantity?: number) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
@@ -38,6 +46,9 @@ type ShoppingContextType = {
   generateComparison: () => void;
   isGeneratingComparison: boolean;
   userLocation: string | null;
+  saveShoppingList: (name?: string) => void;
+  loadSavedList: (id: string) => void;
+  deleteSavedList: (id: string) => void;
 };
 
 const ShoppingContext = createContext<ShoppingContextType | null>(null);
@@ -50,11 +61,32 @@ export const useShoppingContext = () => {
   return context;
 };
 
+// Helper to load saved lists from localStorage
+const getSavedListsFromStorage = (): SavedList[] => {
+  const savedListsJson = localStorage.getItem('savedLists');
+  if (savedListsJson) {
+    try {
+      return JSON.parse(savedListsJson);
+    } catch (error) {
+      console.error('Failed to parse saved lists:', error);
+      return [];
+    }
+  }
+  return [];
+};
+
 export const ShoppingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const { toast } = useToast();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [savedLists, setSavedLists] = useState<SavedList[]>(getSavedListsFromStorage);
   const [marketComparisons, setMarketComparisons] = useState<MarketPrice[]>([]);
   const [isGeneratingComparison, setIsGeneratingComparison] = useState(false);
   const [userLocation, setUserLocation] = useState<string | null>(null);
+
+  // Save lists to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('savedLists', JSON.stringify(savedLists));
+  }, [savedLists]);
 
   // Try to get the user's location
   useEffect(() => {
@@ -150,6 +182,67 @@ export const ShoppingProvider: React.FC<{ children: ReactNode }> = ({ children }
   const clearCart = () => {
     setCartItems([]);
     setMarketComparisons([]);
+  };
+
+  // Function to save the current shopping list
+  const saveShoppingList = (customName?: string) => {
+    if (cartItems.length === 0) {
+      toast({
+        title: "Carrinho vazio",
+        description: "Adicione itens ao carrinho para salvar uma lista.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const currentDate = new Date();
+    const dateString = currentDate.toLocaleDateString('pt-BR');
+    const timeString = currentDate.toLocaleTimeString('pt-BR');
+    
+    // Create a default name if none is provided
+    const name = customName || `Lista de compras (${dateString} ${timeString})`;
+    
+    const newSavedList: SavedList = {
+      id: Date.now().toString(),
+      name,
+      items: [...cartItems],
+      createdAt: currentDate.toISOString()
+    };
+    
+    setSavedLists(prev => [newSavedList, ...prev]);
+    
+    toast({
+      title: "Lista salva",
+      description: `A lista "${name}" foi salva com sucesso.`
+    });
+  };
+  
+  // Function to load a saved list into the cart
+  const loadSavedList = (id: string) => {
+    const listToLoad = savedLists.find(list => list.id === id);
+    
+    if (listToLoad) {
+      setCartItems(listToLoad.items);
+      
+      toast({
+        title: "Lista carregada",
+        description: `A lista "${listToLoad.name}" foi carregada no carrinho.`
+      });
+    }
+  };
+  
+  // Function to delete a saved list
+  const deleteSavedList = (id: string) => {
+    const listToDelete = savedLists.find(list => list.id === id);
+    
+    if (listToDelete) {
+      setSavedLists(prev => prev.filter(list => list.id !== id));
+      
+      toast({
+        title: "Lista removida",
+        description: `A lista "${listToDelete.name}" foi removida.`
+      });
+    }
   };
 
   // Function to generate price comparisons
@@ -259,6 +352,7 @@ export const ShoppingProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const contextValue: ShoppingContextType = {
     cartItems,
+    savedLists,
     addToCart,
     removeFromCart,
     updateQuantity,
@@ -267,7 +361,10 @@ export const ShoppingProvider: React.FC<{ children: ReactNode }> = ({ children }
     marketComparisons,
     generateComparison,
     isGeneratingComparison,
-    userLocation
+    userLocation,
+    saveShoppingList,
+    loadSavedList,
+    deleteSavedList
   };
 
   return (

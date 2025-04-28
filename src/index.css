@@ -92,6 +92,15 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Improve text contrast throughout the app */
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-gray-900 dark:text-white;
+  }
+  
+  p, span, li {
+    @apply text-gray-700 dark:text-gray-200;
+  }
 }
 
 /* Add purple gradient backgrounds */
@@ -101,4 +110,9 @@
 
 .card-gradient {
   @apply bg-gradient-to-br from-[#3E1C77] to-[#29104B] backdrop-blur-sm;
+}
+
+/* High contrast text helpers */
+.text-high-contrast {
+  @apply text-white drop-shadow-sm;
 }
