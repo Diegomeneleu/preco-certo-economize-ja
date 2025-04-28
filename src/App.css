@@ -1,6 +1,6 @@
 
 #root {
-  max-width: 1280px;
+  width: 100%;
   margin: 0 auto;
   text-align: center;
 }
@@ -38,5 +38,41 @@
 }
 
 .read-the-docs {
-  color: #888;
+  color: #fff;
+}
+
+/* Box category style */
+.category-box {
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(136, 70, 218, 0.3);
+}
+
+.category-box:hover {
+  background-color: rgba(136, 70, 218, 0.5);
+}
+
+.category-box.active {
+  background-color: #DF58E9;
+  transform: scale(1.05);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Improved contrast for text */
+.text-white {
+  color: #ffffff;
+}
+
+/* Gradient backgrounds */
+.card-gradient {
+  background: linear-gradient(145deg, rgba(107, 48, 199, 0.6), rgba(223, 88, 233, 0.4));
+}
+
+.bg-purple-gradient {
+  background: linear-gradient(to right, #6B30C7, #8846DA);
 }

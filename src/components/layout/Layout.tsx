@@ -1,12 +1,12 @@
 
 import React from "react";
 import { Outlet } from "react-router-dom";
-import { ShoppingProvider } from "../contexts/ShoppingContext";
+import { ShoppingProvider } from "@/contexts/ShoppingContext";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import DesktopSidebar from "./layout/DesktopSidebar";
-import MobileHeader from "./layout/MobileHeader";
-import DesktopHeader from "./layout/DesktopHeader";
-import MobileNavigation from "./layout/MobileNavigation";
+import DesktopSidebar from "@/components/layout/DesktopSidebar";
+import MobileHeader from "@/components/layout/MobileHeader";
+import DesktopHeader from "@/components/layout/DesktopHeader";
+import MobileNavigation from "@/components/layout/MobileNavigation";
 
 const Layout = () => {
   return (

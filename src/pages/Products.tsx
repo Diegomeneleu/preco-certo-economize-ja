@@ -7,8 +7,6 @@ import { Search } from "lucide-react";
 import { products, searchProducts } from "@/data/products";
 import ProductCard from "@/components/ProductCard";
 import { useShoppingContext } from "@/contexts/ShoppingContext";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 
 const Products = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -45,7 +43,7 @@ const Products = () => {
         <div className="relative mb-6">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white" size={20} />
           <Input
-            className="pl-10"
+            className="pl-10 text-white"
             placeholder="Pesquisar produtos..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -89,19 +87,22 @@ const Products = () => {
           </div>
         )}
         
-        {/* Category selector with box style */}
+        {/* Category selector with improved box style */}
         <div className="mb-6">
           <h2 className="text-xl font-semibold mb-3 text-white">Categorias</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
             {allCategories.map((category) => (
               <div
                 key={category}
-                className={`category-box ${
-                  categoryFilter === category ? "active" : ""
-                }`}
                 onClick={() => setCategoryFilter(category)}
+                className={`
+                  p-3 rounded-lg cursor-pointer transition-all text-center
+                  ${categoryFilter === category 
+                    ? "bg-secondary text-white shadow-lg transform scale-105" 
+                    : "bg-accent/30 text-white hover:bg-accent/50"}
+                `}
               >
-                <span className="text-white font-medium">
+                <span className="font-medium text-sm">
                   {category.charAt(0).toUpperCase() + category.slice(1)}
                 </span>
               </div>
