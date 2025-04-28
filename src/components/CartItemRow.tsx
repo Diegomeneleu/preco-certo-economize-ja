@@ -14,12 +14,12 @@ const CartItemRow = ({ item, showBrand = false }: CartItemRowProps) => {
   const { updateQuantity, removeFromCart, updateBrand } = useShoppingContext();
   
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center py-3 border-b last:border-b-0">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center py-3 border-b last:border-b-0 border-accent/20">
       <div className="flex-shrink-0 mb-2 sm:mb-0">
         <img
           src={item.product.image}
           alt={item.product.name}
-          className="w-16 h-16 object-cover rounded-md"
+          className="w-16 h-16 object-cover rounded-md bg-accent/10"
         />
       </div>
       <div className="flex-grow sm:mx-4">
@@ -31,27 +31,27 @@ const CartItemRow = ({ item, showBrand = false }: CartItemRowProps) => {
               placeholder="Marca (opcional)"
               value={item.brand || ''}
               onChange={(e) => updateBrand(item.product.id, e.target.value)}
-              className="max-w-[200px] h-8 text-sm"
+              className="max-w-[200px] h-8 text-sm bg-accent/10 border-accent/30 text-white"
             />
           </div>
         )}
       </div>
       
       <div className="flex items-center mt-2 sm:mt-0">
-        <div className="flex items-center border rounded-md">
+        <div className="flex items-center border rounded-md bg-accent/20 border-accent/30">
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 rounded-r-none p-0"
+            className="h-8 w-8 rounded-r-none p-0 text-white hover:bg-accent/40"
             onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
           >
             <Minus size={14} />
           </Button>
-          <span className="w-8 text-center">{item.quantity}</span>
+          <span className="w-8 text-center text-white">{item.quantity}</span>
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 rounded-l-none p-0"
+            className="h-8 w-8 rounded-l-none p-0 text-white hover:bg-accent/40"
             onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
           >
             <Plus size={14} />
@@ -60,7 +60,7 @@ const CartItemRow = ({ item, showBrand = false }: CartItemRowProps) => {
         <Button
           variant="ghost"
           size="icon"
-          className="ml-2 text-red-500 hover:text-red-600 hover:bg-red-50"
+          className="ml-2 text-red-400 hover:text-red-300 hover:bg-red-900/20"
           onClick={() => removeFromCart(item.product.id)}
         >
           <Trash size={18} />

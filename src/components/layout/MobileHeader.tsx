@@ -5,9 +5,9 @@ import CartSummary from "./CartSummary";
 
 const MobileHeader = () => {
   return (
-    <div className="p-4 flex justify-between items-center md:hidden">
+    <div className="p-4 flex justify-between items-center md:hidden bg-sidebar">
       <MobileSidebar />
-      <h2 className="font-bold text-primary text-xl">PreçoCerto</h2>
+      <h2 className="font-bold text-white text-xl">PreçoCerto</h2>
       <CartSummary />
     </div>
   );

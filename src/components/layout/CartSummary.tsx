@@ -9,7 +9,6 @@ const CartSummary = () => {
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   
   // Estimate total price (since real price data isn't available in the model)
-  // Using an average value per item
   const estimatedTotal = cartItems.reduce((sum, item) => {
     // Base price varies by product type
     let basePrice = 0;
@@ -29,10 +28,17 @@ const CartSummary = () => {
   
   return (
     <Link to="/simulation" className="flex items-center gap-2 bg-white/10 backdrop-blur-sm p-2 rounded-lg hover:bg-white/20 transition-colors">
-      <ShoppingCart size={18} className="text-white" />
-      <div className="text-white text-sm">
-        <div className="font-medium">{totalItems} {totalItems === 1 ? "item" : "itens"}</div>
-        <div>R$ {estimatedTotal.toFixed(2)}</div>
+      <div className="relative">
+        <ShoppingCart size={24} className="text-white" />
+        {totalItems > 0 && (
+          <span className="absolute -top-2 -right-2 bg-secondary text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+            {totalItems}
+          </span>
+        )}
+      </div>
+      <div className="text-white">
+        <div className="font-medium">{totalItems > 0 ? `${totalItems} ${totalItems === 1 ? "item" : "itens"}` : "Carrinho"}</div>
+        {totalItems > 0 && <div className="text-xs">R$ {estimatedTotal.toFixed(2)}</div>}
       </div>
     </Link>
   );

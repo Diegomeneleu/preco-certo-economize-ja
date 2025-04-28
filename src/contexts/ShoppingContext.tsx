@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 // Types
 export type Product = {
@@ -29,7 +29,7 @@ export type MarketPrice = {
 
 type ShoppingContextType = {
   cartItems: CartItem[];
-  addToCart: (product: Product, brand?: string) => void;
+  addToCart: (product: Product, brand?: string, initialQuantity?: number) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   updateBrand: (productId: string, brand: string) => void;
@@ -37,6 +37,7 @@ type ShoppingContextType = {
   marketComparisons: MarketPrice[];
   generateComparison: () => void;
   isGeneratingComparison: boolean;
+  userLocation: string | null;
 };
 
 const ShoppingContext = createContext<ShoppingContextType | null>(null);
@@ -53,8 +54,51 @@ export const ShoppingProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [marketComparisons, setMarketComparisons] = useState<MarketPrice[]>([]);
   const [isGeneratingComparison, setIsGeneratingComparison] = useState(false);
+  const [userLocation, setUserLocation] = useState<string | null>(null);
 
-  const addToCart = (product: Product, brand?: string) => {
+  // Try to get the user's location
+  useEffect(() => {
+    const fetchLocation = async () => {
+      try {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              const { latitude, longitude } = position.coords;
+              try {
+                const response = await fetch(
+                  `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`
+                );
+                const data = await response.json();
+                
+                // Get city and state from the address
+                const city = data.address?.city || data.address?.town || data.address?.village;
+                const state = data.address?.state;
+                
+                if (city && state) {
+                  setUserLocation(`${city}, ${state}`);
+                } else if (city) {
+                  setUserLocation(city);
+                } else if (state) {
+                  setUserLocation(state);
+                }
+              } catch (error) {
+                console.error("Error fetching location details:", error);
+              }
+            },
+            (error) => {
+              console.log("Geolocation error:", error.message);
+            }
+          );
+        }
+      } catch (error) {
+        console.error("Error accessing geolocation:", error);
+      }
+    };
+
+    fetchLocation();
+  }, []);
+
+  const addToCart = (product: Product, brand?: string, initialQuantity: number = 1) => {
     setCartItems(prev => {
       const existingItemIndex = prev.findIndex(item => item.product.id === product.id);
       
@@ -63,13 +107,13 @@ export const ShoppingProvider: React.FC<{ children: ReactNode }> = ({ children }
         const newCartItems = [...prev];
         newCartItems[existingItemIndex] = {
           ...newCartItems[existingItemIndex],
-          quantity: newCartItems[existingItemIndex].quantity + 1,
+          quantity: newCartItems[existingItemIndex].quantity + initialQuantity,
           brand: brand || newCartItems[existingItemIndex].brand
         };
         return newCartItems;
       } else {
         // Item not in cart, add it
-        return [...prev, { product, quantity: 1, brand }];
+        return [...prev, { product, quantity: initialQuantity, brand }];
       }
     });
   };
@@ -108,7 +152,7 @@ export const ShoppingProvider: React.FC<{ children: ReactNode }> = ({ children }
     setMarketComparisons([]);
   };
 
-  // Function to generate price comparisons with OpenAI
+  // Function to generate price comparisons
   const generateComparison = async () => {
     if (cartItems.length === 0) return;
 
@@ -121,7 +165,10 @@ export const ShoppingProvider: React.FC<{ children: ReactNode }> = ({ children }
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ cartItems }),
+        body: JSON.stringify({ 
+          cartItems,
+          location: userLocation || 'Brasil'
+        }),
       });
       
       if (!response.ok) {
@@ -142,12 +189,35 @@ export const ShoppingProvider: React.FC<{ children: ReactNode }> = ({ children }
   
   // Mock function as fallback
   const generateMockComparison = () => {
-    // Mock data for supermarkets
-    const supermarkets = [
+    // Generate supermarkets based on location if available
+    const regionSupermarkets: Record<string, string[]> = {
+      'São Paulo': ['Extra', 'Pão de Açúcar', 'Carrefour', 'Dia'],
+      'Rio de Janeiro': ['Guanabara', 'Mundial', 'Prezunic', 'Zona Sul'],
+      'Minas Gerais': ['Supernosso', 'BH Supermercados', 'EPA', 'Mineirão'],
+      'Bahia': ['GBarbosa', 'Bompreço', 'Atakarejo', 'Perini'],
+      'Paraná': ['Condor', 'Muffato', 'Festval', 'Super Muffato'],
+      'Santa Catarina': ['Angeloni', 'Bistek', 'Imperatriz', 'Giassi'],
+    };
+
+    // Default supermarkets if location not recognized or available
+    let supermarkets = [
       { id: 'm1', name: 'Carrefour' },
       { id: 'm2', name: 'Extra' },
       { id: 'm3', name: 'Pão de Açúcar' },
     ];
+
+    if (userLocation) {
+      // Try to find markets based on user's location
+      for (const [region, markets] of Object.entries(regionSupermarkets)) {
+        if (userLocation.includes(region)) {
+          supermarkets = markets.map((name, index) => ({
+            id: `m${index + 1}`,
+            name
+          }));
+          break;
+        }
+      }
+    }
 
     // Generate random prices for each product in each supermarket
     const comparisons = supermarkets.map(market => {
@@ -160,10 +230,14 @@ export const ShoppingProvider: React.FC<{ children: ReactNode }> = ({ children }
           basePrice *= 1.2;
         }
         
+        // Price per item
+        const pricePerUnit = parseFloat(basePrice.toFixed(2));
+        
         return {
           productId: item.product.id,
           productName: item.product.name,
-          price: parseFloat((basePrice * item.quantity).toFixed(2)),
+          price: parseFloat((pricePerUnit * item.quantity).toFixed(2)),
+          pricePerUnit: pricePerUnit,
           brand: item.brand
         };
       });
@@ -192,7 +266,8 @@ export const ShoppingProvider: React.FC<{ children: ReactNode }> = ({ children }
     clearCart,
     marketComparisons,
     generateComparison,
-    isGeneratingComparison
+    isGeneratingComparison,
+    userLocation
   };
 
   return (
