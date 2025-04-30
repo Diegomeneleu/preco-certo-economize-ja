@@ -15,15 +15,8 @@ const CartItemRow = ({ item, showBrand = false }: CartItemRowProps) => {
   
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center py-3 border-b last:border-b-0 border-accent/20">
-      <div className="flex-shrink-0 mb-2 sm:mb-0">
-        <img
-          src={item.product.image}
-          alt={item.product.name}
-          className="w-16 h-16 object-cover rounded-md bg-accent/10"
-        />
-      </div>
-      <div className="flex-grow sm:mx-4">
-        <h3 className="font-medium">{item.product.name}</h3>
+      <div className="flex-grow">
+        <h3 className="font-medium text-white">{item.product.name}</h3>
         
         {showBrand && (
           <div className="mt-1">

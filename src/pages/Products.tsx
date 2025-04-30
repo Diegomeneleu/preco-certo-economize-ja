@@ -3,15 +3,27 @@ import React, { useState } from "react";
 import Header from "@/components/Header";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
+import { Search, ChevronRight, ChevronDown } from "lucide-react";
 import { products, searchProducts } from "@/data/products";
 import ProductCard from "@/components/ProductCard";
 import { useShoppingContext } from "@/contexts/ShoppingContext";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 const Products = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("todos");
   const { savedLists, loadSavedList, deleteSavedList } = useShoppingContext();
+  const [categoriesExpanded, setCategoriesExpanded] = useState(true);
 
   // Get all unique categories
   const allCategories = ["todos", ...new Set(products.flatMap(p => p.categories))].sort();
@@ -87,28 +99,42 @@ const Products = () => {
           </div>
         )}
         
-        {/* Category selector with improved box style */}
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold mb-3 text-white">Categorias</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-            {allCategories.map((category) => (
-              <div
-                key={category}
-                onClick={() => setCategoryFilter(category)}
-                className={`
-                  p-3 rounded-lg cursor-pointer transition-all text-center
-                  ${categoryFilter === category 
-                    ? "bg-secondary text-white shadow-lg transform scale-105" 
-                    : "bg-accent/30 text-white hover:bg-accent/50"}
-                `}
-              >
-                <span className="font-medium text-sm">
-                  {category.charAt(0).toUpperCase() + category.slice(1)}
-                </span>
-              </div>
-            ))}
+        {/* Category selector as an expandable accordion */}
+        <Collapsible 
+          open={categoriesExpanded}
+          onOpenChange={setCategoriesExpanded}
+          className="mb-6 card-gradient p-4 rounded-lg border border-white/10"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-xl font-semibold text-white">Categorias</h2>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="hover:bg-white/10">
+                {categoriesExpanded ? <ChevronDown className="h-4 w-4 text-white" /> : <ChevronRight className="h-4 w-4 text-white" />}
+              </Button>
+            </CollapsibleTrigger>
           </div>
-        </div>
+          
+          <CollapsibleContent>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mt-3">
+              {allCategories.map((category) => (
+                <div
+                  key={category}
+                  onClick={() => setCategoryFilter(category)}
+                  className={`
+                    p-3 rounded-lg cursor-pointer transition-all text-center
+                    ${categoryFilter === category 
+                      ? "bg-secondary text-white shadow-lg transform scale-105" 
+                      : "bg-accent/30 text-white hover:bg-accent/50"}
+                  `}
+                >
+                  <span className="font-medium text-sm">
+                    {category.charAt(0).toUpperCase() + category.slice(1)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
         
         <div className="mb-6">
           <h2 className="text-xl font-semibold mb-4 text-white">Produtos</h2>

@@ -20,6 +20,7 @@ export type SavedList = {
   name: string;
   items: CartItem[];
   createdAt: string;
+  isPrivate: boolean;
 };
 
 export type MarketPrice = {
@@ -46,9 +47,12 @@ type ShoppingContextType = {
   generateComparison: () => void;
   isGeneratingComparison: boolean;
   userLocation: string | null;
-  saveShoppingList: (name?: string) => void;
+  searchRadius: number;
+  setSearchRadius: (radius: number) => void;
+  saveShoppingList: (name?: string, isPrivate?: boolean) => void;
   loadSavedList: (id: string) => void;
   deleteSavedList: (id: string) => void;
+  updateListPrivacy: (id: string, isPrivate: boolean) => void;
 };
 
 const ShoppingContext = createContext<ShoppingContextType | null>(null);
@@ -66,7 +70,12 @@ const getSavedListsFromStorage = (): SavedList[] => {
   const savedListsJson = localStorage.getItem('savedLists');
   if (savedListsJson) {
     try {
-      return JSON.parse(savedListsJson);
+      // Convert old format to new format if needed (adding isPrivate field)
+      const parsedLists = JSON.parse(savedListsJson);
+      return parsedLists.map((list: any) => ({
+        ...list,
+        isPrivate: list.isPrivate !== undefined ? list.isPrivate : false,
+      }));
     } catch (error) {
       console.error('Failed to parse saved lists:', error);
       return [];
@@ -82,6 +91,7 @@ export const ShoppingProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [marketComparisons, setMarketComparisons] = useState<MarketPrice[]>([]);
   const [isGeneratingComparison, setIsGeneratingComparison] = useState(false);
   const [userLocation, setUserLocation] = useState<string | null>(null);
+  const [searchRadius, setSearchRadius] = useState<number>(5); // Default 5km radius
 
   // Save lists to localStorage whenever they change
   useEffect(() => {
@@ -185,7 +195,7 @@ export const ShoppingProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   // Function to save the current shopping list
-  const saveShoppingList = (customName?: string) => {
+  const saveShoppingList = (customName?: string, isPrivate: boolean = false) => {
     if (cartItems.length === 0) {
       toast({
         title: "Carrinho vazio",
@@ -206,14 +216,15 @@ export const ShoppingProvider: React.FC<{ children: ReactNode }> = ({ children }
       id: Date.now().toString(),
       name,
       items: [...cartItems],
-      createdAt: currentDate.toISOString()
+      createdAt: currentDate.toISOString(),
+      isPrivate
     };
     
     setSavedLists(prev => [newSavedList, ...prev]);
     
     toast({
       title: "Lista salva",
-      description: `A lista "${name}" foi salva com sucesso.`
+      description: `A lista "${name}" foi salva com sucesso ${isPrivate ? '(privada)' : ''}.`
     });
   };
   
@@ -245,6 +256,26 @@ export const ShoppingProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   };
 
+  // Function to update privacy setting of a list
+  const updateListPrivacy = (id: string, isPrivate: boolean) => {
+    setSavedLists(prev => 
+      prev.map(list => 
+        list.id === id 
+          ? { ...list, isPrivate } 
+          : list
+      )
+    );
+    
+    const listToUpdate = savedLists.find(list => list.id === id);
+    
+    if (listToUpdate) {
+      toast({
+        title: "Lista atualizada",
+        description: `A lista "${listToUpdate.name}" agora é ${isPrivate ? 'privada' : 'pública'}.`
+      });
+    }
+  };
+
   // Function to generate price comparisons
   const generateComparison = async () => {
     if (cartItems.length === 0) return;
@@ -252,7 +283,7 @@ export const ShoppingProvider: React.FC<{ children: ReactNode }> = ({ children }
     setIsGeneratingComparison(true);
     
     try {
-      // Call OpenAI Edge Function
+      // Call OpenAI Edge Function with updated radius parameter
       const response = await fetch('/api/generate-market-comparison', {
         method: 'POST',
         headers: {
@@ -260,7 +291,8 @@ export const ShoppingProvider: React.FC<{ children: ReactNode }> = ({ children }
         },
         body: JSON.stringify({ 
           cartItems,
-          location: userLocation || 'Brasil'
+          location: userLocation || 'Brasil',
+          radius: searchRadius
         }),
       });
       
@@ -362,9 +394,12 @@ export const ShoppingProvider: React.FC<{ children: ReactNode }> = ({ children }
     generateComparison,
     isGeneratingComparison,
     userLocation,
+    searchRadius,
+    setSearchRadius,
     saveShoppingList,
     loadSavedList,
-    deleteSavedList
+    deleteSavedList,
+    updateListPrivacy
   };
 
   return (
