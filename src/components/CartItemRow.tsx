@@ -1,0 +1,66 @@
+
+import React from "react";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Minus, Plus, Trash } from "lucide-react";
+import { CartItem, useShoppingContext } from "../contexts/ShoppingContext";
+
+type CartItemRowProps = {
+  item: CartItem;
+  showBrand?: boolean;
+};
+
+const CartItemRow = ({ item, showBrand = false }: CartItemRowProps) => {
+  const { updateQuantity, removeFromCart, updateBrand } = useShoppingContext();
+  
+  return (
+    <div className="flex flex-col sm:flex-row items-start sm:items-center py-3 border-b last:border-b-0 border-accent/20">
+      <div className="flex-grow">
+        <h3 className="font-medium text-white">{item.product.name}</h3>
+        
+        {showBrand && (
+          <div className="mt-1">
+            <Input 
+              placeholder="Marca (opcional)"
+              value={item.brand || ''}
+              onChange={(e) => updateBrand(item.product.id, e.target.value)}
+              className="max-w-[200px] h-8 text-sm bg-accent/10 border-accent/30 text-white"
+            />
+          </div>
+        )}
+      </div>
+      
+      <div className="flex items-center mt-2 sm:mt-0">
+        <div className="flex items-center border rounded-md bg-accent/20 border-accent/30">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-r-none p-0 text-white hover:bg-accent/40"
+            onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+          >
+            <Minus size={14} />
+          </Button>
+          <span className="w-8 text-center text-white">{item.quantity}</span>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-l-none p-0 text-white hover:bg-accent/40"
+            onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+          >
+            <Plus size={14} />
+          </Button>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="ml-2 text-red-400 hover:text-red-300 hover:bg-red-900/20"
+          onClick={() => removeFromCart(item.product.id)}
+        >
+          <Trash size={18} />
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+export default CartItemRow;
