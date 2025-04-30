@@ -1,59 +1,15 @@
+
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
-
-// Types
-export type Product = {
-  id: string;
-  name: string;
-  categories: string[];
-  image: string;
-};
-
-export type CartItem = {
-  product: Product;
-  quantity: number;
-  brand?: string;
-};
-
-export type SavedList = {
-  id: string;
-  name: string;
-  items: CartItem[];
-  createdAt: string;
-  isPrivate: boolean;
-};
-
-export type MarketPrice = {
-  marketId: string;
-  marketName: string;
-  totalPrice: number;
-  items: {
-    productId: string;
-    price: number;
-    productName: string;
-    brand?: string;
-  }[];
-};
-
-type ShoppingContextType = {
-  cartItems: CartItem[];
-  savedLists: SavedList[];
-  addToCart: (product: Product, brand?: string, initialQuantity?: number) => void;
-  removeFromCart: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
-  updateBrand: (productId: string, brand: string) => void;
-  clearCart: () => void;
-  marketComparisons: MarketPrice[];
-  generateComparison: () => void;
-  isGeneratingComparison: boolean;
-  userLocation: string | null;
-  searchRadius: number;
-  setSearchRadius: (radius: number) => void;
-  saveShoppingList: (name?: string, isPrivate?: boolean) => void;
-  loadSavedList: (id: string) => void;
-  deleteSavedList: (id: string) => void;
-  updateListPrivacy: (id: string, isPrivate: boolean) => void;
-};
+import { fetchLocation } from "@/utils/geo-utils";
+import { generateMarketComparisons } from "@/utils/market-utils";
+import { 
+  Product, 
+  CartItem, 
+  SavedList, 
+  MarketPrice, 
+  ShoppingContextType 
+} from "@/types/shopping";
 
 const ShoppingContext = createContext<ShoppingContextType | null>(null);
 
@@ -100,44 +56,18 @@ export const ShoppingProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   // Try to get the user's location
   useEffect(() => {
-    const fetchLocation = async () => {
+    const getUserLocation = async () => {
       try {
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            async (position) => {
-              const { latitude, longitude } = position.coords;
-              try {
-                const response = await fetch(
-                  `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`
-                );
-                const data = await response.json();
-                
-                // Get city and state from the address
-                const city = data.address?.city || data.address?.town || data.address?.village;
-                const state = data.address?.state;
-                
-                if (city && state) {
-                  setUserLocation(`${city}, ${state}`);
-                } else if (city) {
-                  setUserLocation(city);
-                } else if (state) {
-                  setUserLocation(state);
-                }
-              } catch (error) {
-                console.error("Error fetching location details:", error);
-              }
-            },
-            (error) => {
-              console.log("Geolocation error:", error.message);
-            }
-          );
+        const location = await fetchLocation();
+        if (location) {
+          setUserLocation(location);
         }
       } catch (error) {
         console.error("Error accessing geolocation:", error);
       }
     };
 
-    fetchLocation();
+    getUserLocation();
   }, []);
 
   const addToCart = (product: Product, brand?: string, initialQuantity: number = 1) => {
@@ -283,103 +213,14 @@ export const ShoppingProvider: React.FC<{ children: ReactNode }> = ({ children }
     setIsGeneratingComparison(true);
     
     try {
-      // Call OpenAI Edge Function with updated radius parameter
-      const response = await fetch('/api/generate-market-comparison', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          cartItems,
-          location: userLocation || 'Brasil',
-          radius: searchRadius
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to generate comparison');
-      }
-      
-      const data = await response.json();
-      setMarketComparisons(data.marketComparisons);
+      // Generate market comparisons with location and radius parameters
+      const comparisons = await generateMarketComparisons(cartItems, userLocation, searchRadius);
+      setMarketComparisons(comparisons);
     } catch (error) {
       console.error('Error generating comparison:', error);
-      
-      // Fallback to mock data if API fails
-      generateMockComparison();
     } finally {
       setIsGeneratingComparison(false);
     }
-  };
-  
-  // Mock function as fallback
-  const generateMockComparison = () => {
-    // Generate supermarkets based on location if available
-    const regionSupermarkets: Record<string, string[]> = {
-      'São Paulo': ['Extra', 'Pão de Açúcar', 'Carrefour', 'Dia'],
-      'Rio de Janeiro': ['Guanabara', 'Mundial', 'Prezunic', 'Zona Sul'],
-      'Minas Gerais': ['Supernosso', 'BH Supermercados', 'EPA', 'Mineirão'],
-      'Bahia': ['GBarbosa', 'Bompreço', 'Atakarejo', 'Perini'],
-      'Paraná': ['Condor', 'Muffato', 'Festval', 'Super Muffato'],
-      'Santa Catarina': ['Angeloni', 'Bistek', 'Imperatriz', 'Giassi'],
-    };
-
-    // Default supermarkets if location not recognized or available
-    let supermarkets = [
-      { id: 'm1', name: 'Carrefour' },
-      { id: 'm2', name: 'Extra' },
-      { id: 'm3', name: 'Pão de Açúcar' },
-    ];
-
-    if (userLocation) {
-      // Try to find markets based on user's location
-      for (const [region, markets] of Object.entries(regionSupermarkets)) {
-        if (userLocation.includes(region)) {
-          supermarkets = markets.map((name, index) => ({
-            id: `m${index + 1}`,
-            name
-          }));
-          break;
-        }
-      }
-    }
-
-    // Generate random prices for each product in each supermarket
-    const comparisons = supermarkets.map(market => {
-      const items = cartItems.map(item => {
-        // Base price varies by market, product and brand
-        let basePrice = 5 + Math.random() * 15;
-        
-        // Premium brands cost more
-        if (item.brand && ['Nestlé', 'Tio João', 'Dove', 'Omo'].includes(item.brand)) {
-          basePrice *= 1.2;
-        }
-        
-        // Price per item
-        const pricePerUnit = parseFloat(basePrice.toFixed(2));
-        
-        return {
-          productId: item.product.id,
-          productName: item.product.name,
-          price: parseFloat((pricePerUnit * item.quantity).toFixed(2)),
-          pricePerUnit: pricePerUnit,
-          brand: item.brand
-        };
-      });
-
-      const totalPrice = parseFloat(items.reduce((sum, item) => sum + item.price, 0).toFixed(2));
-      
-      return {
-        marketId: market.id,
-        marketName: market.name,
-        totalPrice,
-        items
-      };
-    });
-
-    // Sort by total price
-    const sortedComparisons = comparisons.sort((a, b) => a.totalPrice - b.totalPrice);
-    setMarketComparisons(sortedComparisons);
   };
 
   const contextValue: ShoppingContextType = {
@@ -408,3 +249,5 @@ export const ShoppingProvider: React.FC<{ children: ReactNode }> = ({ children }
     </ShoppingContext.Provider>
   );
 };
+
+export type { Product, CartItem, SavedList, MarketPrice };

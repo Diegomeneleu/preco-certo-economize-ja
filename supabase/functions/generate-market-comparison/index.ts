@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
@@ -8,7 +9,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-type CartItem = {
+interface CartItem {
   product: {
     id: string;
     name: string;
@@ -17,19 +18,13 @@ type CartItem = {
   };
   quantity: number;
   brand?: string;
-};
+}
 
-type MarketPrice = {
-  marketId: string;
-  marketName: string;
-  totalPrice: number;
-  items: {
-    productId: string;
-    productName: string;
-    price: number;
-    brand?: string;
-  }[];
-};
+interface MarketComparisonRequest {
+  cartItems: CartItem[];
+  location: string;
+  radius: number; // radius in kilometers
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -43,7 +38,7 @@ serve(async (req) => {
       throw new Error("OpenAI API key not found in environment variables");
     }
 
-    const { cartItems } = await req.json() as { cartItems: CartItem[] };
+    const { cartItems, location, radius = 5 } = await req.json() as MarketComparisonRequest;
 
     if (!cartItems || cartItems.length === 0) {
       return new Response(
@@ -52,9 +47,12 @@ serve(async (req) => {
       );
     }
 
-    // Create a prompt for OpenAI
+    // Adjust market selection based on radius
+    const marketCount = Math.min(3 + Math.floor(radius / 5), 6); // 3-6 markets based on radius
+
+    // Create a prompt for OpenAI that includes location and radius information
     const prompt = `
-    Generate a realistic price comparison for these grocery items in three different supermarkets (Carrefour, Extra, Pão de Açúcar).
+    Generate a realistic price comparison for these grocery items in ${marketCount} different supermarkets in ${location} within a ${radius}km radius.
     
     Please analyze these items and provide a JSON response with the price of each item in each supermarket:
     ${cartItems.map(item => `- ${item.product.name} (Quantity: ${item.quantity})${item.brand ? ` - Brand: ${item.brand}` : ''} - Categories: ${item.product.categories.join(', ')}`).join('\n')}
@@ -68,7 +66,7 @@ serve(async (req) => {
       "marketComparisons": [
         {
           "marketId": "m1",
-          "marketName": "Carrefour",
+          "marketName": "[Market name - use real supermarket names common in ${location}]",
           "totalPrice": 150.75,
           "items": [
             {
@@ -80,12 +78,14 @@ serve(async (req) => {
             // other products...
           ]
         },
-        // other markets...
+        // Include ${marketCount} markets in total...
       ]
     }
     5. Sort the markets by totalPrice (cheapest first)
     6. Ensure that different stores have different prices for the same items (realistically)
     7. Ensure high quality brands cost more than generic ones
+    8. Make sure market names are realistic for the ${location} region
+    9. Consider that stores farther away may have different pricing
 
     Only respond with valid JSON, no explanations or other text.
     `;
@@ -102,7 +102,7 @@ serve(async (req) => {
         messages: [
           { 
             role: 'system', 
-            content: 'You are a helpful assistant that generates realistic supermarket price comparisons in JSON format for Brazil. You understand Brazilian pricing, brands, and markets.' 
+            content: 'You are a helpful assistant that generates realistic supermarket price comparisons in JSON format for Brazil. You understand Brazilian pricing, brands, and markets in different regions.' 
           },
           { role: 'user', content: prompt }
         ],
